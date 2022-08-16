@@ -28,11 +28,10 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 
 #Email
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp-relay.sendinblue.com'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'indianpremierleague202208@gmail.com'
-EMAIL_HOST_PASSWORD = 'OjKyNY8zMtRrEUH5'
+EMAIL_HOST_PASSWORD = 'sgdswcngcpoaohhz'
 EMAIL_PORT = 587
 
 # 'Unoapp@1234'

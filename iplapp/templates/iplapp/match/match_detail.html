@@ -17,7 +17,7 @@
             </div>
             <div class="col-4 col-sm-4 col-md-4 col-lg-4 my-auto">
                 <span class="ipl-livescore">
-                    {{home_goals|length}} - {{guest_goals|length}}
+                    {{match.home_team_score}} - {{match.guest_team_score}}
                 </span>
                 <p class="ipl-livescore-sub">
                 {% if match.match_status == 'scheduled' %}
@@ -74,7 +74,7 @@
                     <form method="POST" id="guestGoalForm" class="goal-form">
                         {{guest_goal_form.as_p}}
                         {%csrf_token%}
-                        <button type="submit" name="guest_goal_submit" class="save btn btn-default">Add Goal</button>
+                        <button type="submit" name="guest_goal_submit" class="save btn btn-default">Add Score</button>
                     </form>
                 </div>
             </div>

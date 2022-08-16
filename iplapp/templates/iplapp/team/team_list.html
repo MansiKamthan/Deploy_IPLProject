@@ -16,8 +16,10 @@
                 Coach - {{team.coach}}
             </p>
             <a href="{% url 'iplapp:team_detail' pk=team.pk %}" class="card-link">View</a>
+            {% if user.is_authenticated and request.user.is_superuser or user.groups.all and user.groups.all.0.name == "Admin" %}
             <a href="{% url 'iplapp:team_edit' pk=team.pk %}" class="card-link">Edit</a>
             <a href="{% url 'iplapp:team_delete' pk=team.pk %}" onclick="return confirm('Are you sure you want to Delete?')" class="card-link">Delete</a>
+            {% endif %}
         </div>
     </div>
 </div>

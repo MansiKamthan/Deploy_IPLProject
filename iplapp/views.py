@@ -62,6 +62,9 @@ def team_detail(request, pk):
     except Team.DoesNotExist:
         return render(request, 'iplapp/team/team_detail.html',
                       {'run_list': None,'cap':None,'players':None,'totalrun':0})
+    except Team.DoesNotExist:
+        return render(request, 'iplapp/team/team_detail.html',
+                      {'run_list': None,'cap':None,'players':None,'totalrun':0})
 
 @login_required
 def team_new(request):
@@ -191,7 +194,7 @@ def player_edit(request, pk, coachid):
 
                 players = Player.objects.filter(team=team.id)
                 player_count = players.count()
-            #players = Player.objects.filter(created_date__lte=timezone.now())
+
             return render(request, 'iplapp/player/myteamplayer_list.html',
                           {'myplayer': players,
                            'player_count': player_count,
@@ -274,6 +277,7 @@ def match_referee(request, pk):
     match_list = Match.objects.filter(match_referee=pk).filter(Q(match_status='in_progress') | Q(match_status='scheduled')).order_by('match_day', 'match_start_time')
     return render(request, 'iplapp/match/referee_dashboard.html', {'match_list': match_list, })
 
+
 def match_detail(request, pk):
     #Getting details
     match = get_object_or_404(Match, pk=pk)
@@ -299,7 +303,7 @@ def match_detail(request, pk):
             goal.match = get_object_or_404(Match, pk=pk)
             goal.team = home_team
             goal.save()
-            match.home_team_score = home_goals.count()
+            match.home_team_score = home_goals.aggregate(Total=Sum('run'))['Total']
             match.save()
     elif request.method == "POST" and 'guest_goal_submit' in request.POST:
         guest_goal_form = PlayerStatsForm(request.POST, team_id=guest_team.id)
@@ -309,20 +313,16 @@ def match_detail(request, pk):
             goal.match = get_object_or_404(Match, pk=pk)
             goal.team = guest_team
             goal.save()
-            match.guest_team_score = guest_goals.count()
+            match.guest_team_score = guest_goals.aggregate(Total=Sum('run'))['Total']
             match.save()
 
     elif request.method == "POST" and 'update_match_status' in request.POST:
         match_status_form = MatchStatusForm(request.POST, instance=match)
         if match_status_form.is_valid():
-            print('>>>>Match Status Valid')
             match = match_status_form.save(commit=False)
-            match.home_team_score = home_goals.count()
-            match.guest_team_score = guest_goals.count()
-            print('>>Home Goals - ', home_goals.count())
-            print('>>Guest Goals - ', guest_goals.count())
+            match.home_team_score = home_goals.aggregate(Total=Sum('run'))['Total']
+            match.guest_team_score = guest_goals.aggregate(Total=Sum('run'))['Total']
             match.save()
-            #Updating point table for both teams
             if(match.match_status=='full_time'):
                 team = home_team
                 home_won = Match.objects.filter(home_team=team, match_status='full_time').filter(home_team_score__gt=F('guest_team_score')).count()
@@ -405,7 +405,6 @@ def role_list(request):
 
 @login_required
 def assign_role(request):
-    #form = AssignRoleForm(request.POST or None)
     user_list = User.objects.all()
     role_list = IPLrole.objects.filter(registered='No')
     if request.method == "POST":
@@ -417,7 +416,6 @@ def assign_role(request):
             host_name = request.get_host()
             host_url = request.get_full_path()
             final_url = 'http://' + host_name + "/register"
-           # post_url = request.build_absolute_uri(post.get_absolute_url())
             subject = 'Activate your IPL account as ' + cd['role']
             message = "Hi!\n You are selected as '" + cd['role'] +"' from IPL administration." \
                     "\nPlease register at IPL using below link \n " +final_url + "\n Thanks ! IPL"
@@ -463,9 +461,7 @@ def register_view(request):
 
         iplrole = IPLrole.objects.get(receiver_email=email)
         group_name = iplrole.role
-        print('group_name---', group_name)
         my_group = Group.objects.get(name=group_name)
-        print('my_group--', my_group)
         my_group.user_set.add(user)
 
         iplrole.registered = 'Yes'
@@ -496,19 +492,15 @@ def logout_view(request):
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
-        print('form--', form)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # Important!
+            update_session_auth_hash(request, user)
             messages.success(request, 'Your password was successfully updated!')
-            print('form-valid-', form)
-            #return redirect('ipl_app:home')
             return HttpResponseRedirect('success/')
         else:
             messages.error(request, 'Please correct the error below.')
     else:
         form = PasswordChangeForm(request.user)
-        #print('form-new-', form)
     return render(request, 'registration/change_password.html', {'form': form})
 
 
